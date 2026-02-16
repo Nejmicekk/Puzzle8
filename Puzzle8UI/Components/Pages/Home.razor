@@ -1,0 +1,191 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using System.Diagnostics
+
+<PageTitle>Puzzle 8 Solver</PageTitle>
+
+<div class="container">
+    
+    <div class="panel nodes-area">
+        <h3>Nodes</h3>
+        <div class="nodes-list">
+            @if (NodesTraversed > 0)
+            {
+                @for (int i = 0; i < SolutionPath.Count; i++)
+                {
+                    int index = i;
+                    <div class="node-item @(i == CurrentIndex ? "active" : "")" type="button" @onclick="() => SelectNode(index)">@SolutionPath[index].CurrentState.ToString()</div>
+                }
+            }
+            else
+            {
+                <div class="node-item">theres nothing yet...</div>
+            }
+        </div>
+    </div>
+
+    <div class="panel info-area">
+        <div class="info-card">
+            <h3>Nodes Traversed</h3>
+            <div class="info-value@(NodesTraversed == null ? "-null" : "")">
+                @((object)NodesTraversed ?? "null")
+            </div>
+        </div>
+        <div class="info-card">
+            <h3>Time</h3>
+            <div class="info-value@(TimeElapsed == null ? "-null" : "")">
+                @(TimeElapsed ?? "null")
+            </div>
+        </div>
+        <div class="info-card">
+            <h3>Move</h3>
+            <div class="info-value@(CurrentMove == null ? "-null" : "")">
+                @(CurrentMove ?? "null")
+            </div>
+        </div>
+    </div>
+
+    <div class="panel matrix-area">
+        <h3>Puzzle Matrix</h3>
+        <div class="matrix" style="grid-template-columns: repeat(@Size, 1fr); zoom: @(InputSize < 3 ? 1.0 : (3 / (double)InputSize));;">
+            @if (DisplayMatrix != null)
+            {
+                @for (int i = 0; i < Size; i++)
+                {
+                    @for (int j = 0; j < Size; j++)
+                    {
+                        int val = DisplayMatrix[i, j];
+                        if (val == 0)
+                        {
+                            <div class="tile-empty"></div>
+                        }
+                        else
+                        {
+                            <div class="tile">@val</div>
+                        }
+                    }
+                }
+            }
+        </div>
+            @if (!string.IsNullOrEmpty(StatusMessage) && (IsModal == false))
+            {
+                <p class="@(IsError ? "alert-danger" : "alert-success")" >@StatusMessage</p>
+            }
+    </div>
+    
+    <div class="panel buttons">
+        @if (StatusMessage != "Successfully solved!")
+        {
+            <button class="button-34" role="button" style="margin-right: 5px;" data-bs-toggle="modal" data-bs-target="#setupModal">
+                Start
+            </button>
+        }
+        <button class="button-34" type="button" @onclick="OnResetClick" role="button" style="background: red; box-shadow: 0 4px 0px rgba(181, 45, 33, 0.2);">
+            Reset
+        </button>
+    </div>
+</div>
+
+<div id="setupModal" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="max-width: 40rem;">
+
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Setup your matrices</h4>
+            </div>
+            
+            <div class="modal-body">
+                
+                <div class="modal-area">
+                    @if (!string.IsNullOrEmpty(StatusMessage) && (IsModal == true))
+                    {
+                        <p class="@(IsError ? "alert-danger" : "alert-success")" >@StatusMessage</p>
+                    }
+                    <div class="size-card">
+                        <h3>Enter size</h3>
+                        
+                        <input type="number" @bind="InputSize" min="2" max="6" style="width: 15rem;"/>
+                        <button class="button-34" @onclick="OnGenerateClick" role="button" type="button" style="margin-left: 5px; width: 10rem;">
+                            Draw grids
+                        </button>
+                    </div>
+                    
+                    @if (TargetMatrix == null && StartMatrix == null)
+                    {
+                        <div style="margin-top: 10px; min-height: 45px; display: flex; justify-content: center; align-items: center;">
+                            <div class="animate-fade-in">
+                                <span style="margin-right: 10px; color: #5a7b94; font-size: 0.9rem;">Here is a preset for you!</span>
+                                <button class="button-34" @onclick="LoadEasyPreset" type="button" style="background: #20c997; box-shadow: 0 4px 0 rgba(16, 112, 84, 0.2); font-size: 0.8rem; width: auto; padding: 5px 15px;">
+                                    Load 3x3 Example
+                                </button>
+                            </div>
+                        </div> 
+                    }
+                    
+                    @if (StartMatrix != null)
+                    {
+                        <div class="generated-grids" style="justify-content: center">
+
+                            <div class="panel generated-grid-matrix-area">
+                                <h3>Source Matrix</h3>
+                                <div class="generated-grid-matrix" style="display: grid; grid-template-columns: repeat(@Size, 1fr); gap: 5px; width: fit-content; margin: 0 auto;">
+                                    @for (int i = 0; i < Size; i++)
+                                    {
+                                        int r = i;
+
+                                        @for (int j = 0; j < Size; j++)
+                                        {
+                                            int c = j;
+
+                                            <input type="number"
+                                                   @bind="StartMatrix[r, c]"
+                                                   class="tile-input"/>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="panel generated-grid-matrix-area">
+                                <h3>Target Matrix</h3>
+                                <div class="generated-grid-matrix" style="display: grid; grid-template-columns: repeat(@Size, 1fr); gap: 5px; width: fit-content; margin: 0 auto;">
+                                    @for (int i = 0; i < Size; i++)
+                                    {
+                                        int r = i;
+
+                                        @for (int j = 0; j < Size; j++)
+                                        {
+                                            int c = j;
+
+                                            <input type="number"
+                                                   @bind="TargetMatrix[r, c]"
+                                                   class="tile-input"/>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="modal-footer" style="margin-top: 1.25rem;">
+                    @if (StartMatrix != null && TargetMatrix != null)
+                    {
+                        <button class="button-34" @onclick="OnStartClick" role="button" type="button" data-bs-dismiss="modal">
+                            Start
+                        </button>
+                        <button class="button-34" type="button" data-bs-dismiss="modal" role="button" style="background: red; box-shadow: 0 4px 0px rgba(181, 45, 33, 0.2);">
+                            Close
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="button-34" type="button" data-bs-dismiss="modal" role="button" style="background: red; box-shadow: 0 4px 0px rgba(181, 45, 33, 0.2);">
+                            Close
+                        </button>
+                    }
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>

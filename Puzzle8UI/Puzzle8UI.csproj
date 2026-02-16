@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\UI\PanelInfo.razor" />
+      <_ContentIncludedByDefault Remove="Components\UI\PanelMatrix.razor" />
+      <_ContentIncludedByDefault Remove="Components\UI\PanelNodes.razor" />
+      <_ContentIncludedByDefault Remove="Components\UI\SetupModal.razor" />
+    </ItemGroup>
+
+</Project>
